@@ -1,60 +1,255 @@
-<!DOCTYPE html>
-<html lang="ka">
+<!doctype html>
+<html lang="ka" class="h-full">
 <head>
-  <meta charset="UTF-8">
-  <title>Egrisi Firebase Test</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ეგრისი - გარდერობი</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * { font-family: 'Noto Sans Georgian', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: #1a1a2e; color: white; }
+        .item-card { transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.1); }
+        .overdue-card { 
+            background: linear-gradient(135deg, rgba(127, 29, 29, 0.6) 0%, rgba(69, 10, 10, 0.6) 100%) !important;
+            border: 1px solid #ef4444 !important;
+        }
+        .tab-btn { position: relative; padding-bottom: 8px; transition: all 0.3s; opacity: 0.6; }
+        .tab-btn.active { opacity: 1; color: #e94560; border-bottom: 3px solid #e94560; }
+        input, select { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.2) !important; color: white; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
 </head>
+<body class="h-full overflow-x-hidden">
 
-<body>
+    <div id="app" class="min-h-full pb-10">
+        <header class="sticky top-0 z-40 backdrop-blur-lg bg-[#1a1a2e]/80 border-b border-white/10 p-4">
+            <div class="max-w-6xl mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-red-500 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🎭</span>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold">ეგრისი</h1>
+                        <p class="text-[10px] text-gray-400 uppercase tracking-widest">ანსამბლი</p>
+                    </div>
+                </div>
+                <button onclick="openModal()" class="bg-pink-600 p-2 rounded-full shadow-lg shadow-pink-600/30 active:scale-90 transition-transform">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                </button>
+            </div>
 
-  <h1>Firebase Connection Test</h1>
-  <p id="status">Connecting...</p>
+            <div class="max-w-6xl mx-auto mt-4 flex gap-6 overflow-x-auto no-scrollbar text-sm font-medium border-b border-white/5">
+                <button onclick="setFilter('all')" class="tab-btn active" data-filter="all">ყველა</button>
+                <button onclick="setFilter('boys')" class="tab-btn" data-filter="boys">ბიჭი</button>
+                <button onclick="setFilter('girls')" class="tab-btn" data-filter="girls">გოგონა</button>
+                <button onclick="setFilter('overdue')" class="tab-btn text-red-400" data-filter="overdue">დაგვიანებული</button>
+            </div>
+            
+            <div class="max-w-6xl mx-auto mt-3">
+                <input type="text" id="search-input" onkeyup="handleSearch()" placeholder="ძებნა..." class="w-full p-3 rounded-xl text-sm outline-none focus:ring-1 ring-pink-500">
+            </div>
+        </header>
 
-  <button id="sendBtn">Send Test Data</button>
+        <div class="max-w-6xl mx-auto px-4 py-6 grid grid-cols-2 gap-4">
+            <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
+                <div class="text-3xl font-bold" id="stat-total">0</div>
+                <div class="text-xs text-gray-400">ნივთი</div>
+            </div>
+            <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
+                <div class="text-3xl font-bold text-red-500" id="stat-overdue">0</div>
+                <div class="text-xs text-gray-400">დაგვიანებული</div>
+            </div>
+        </div>
 
-  <script type="module">
-    // Firebase SDK (CDN-იდან)
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
-    import { 
-      getDatabase, 
-      ref, 
-      set 
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        <main class="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="items-container"></main>
+    </div>
 
-    // შენი Firebase Config
-    const firebaseConfig = {
-      apiKey: "AIzaSyBSzgEbtRnLgiYrbCFhgb1fX9_f4cDLWgI",
-      authDomain: "egrisi-79625.firebaseapp.com",
-      databaseURL: "https://egrisi-79625-default-rtdb.firebaseio.com",
-      projectId: "egrisi-79625",
-      storageBucket: "egrisi-79625.firebasestorage.app",
-      messagingSenderId: "110533682613",
-      appId: "1:110533682613:web:3ac71dab90e5972cf265fc",
-      measurementId: "G-LH27P7S680"
-    };
+    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal()"></div>
+        <div class="relative bg-[#1a1a2e] w-full max-w-md rounded-3xl p-6 border border-white/10 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <form id="item-form" onsubmit="handleSubmit(event)" class="space-y-4">
+                <h2 id="modal-title" class="text-xl font-bold text-pink-500">დამატება</h2>
+                
+                <input type="text" id="input-name" placeholder="ნივთის სახელი" required class="w-full p-3 rounded-xl outline-none">
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <select id="input-gender" class="p-3 rounded-xl outline-none">
+                        <option value="boys">ბიჭი</option>
+                        <option value="girls">გოგონა</option>
+                    </select>
+                    <select id="input-condition" class="p-3 rounded-xl outline-none">
+                        <option value="ახალი">ახალი</option>
+                        <option value="კარგი">კარგი</option>
+                        <option value="საშუალო">საშუალო</option>
+                        <option value="შეკეთება საჭირო">შეკეთება საჭირო</option>
+                    </select>
+                </div>
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const db = getDatabase(app);
+                <div class="bg-white/5 p-4 rounded-2xl space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-bold">გაცემულია?</span>
+                        <input type="checkbox" id="input-checked-out" onchange="toggleCheckoutFields()" class="w-5 h-5 accent-pink-500">
+                    </div>
+                    <div id="checkout-fields" class="hidden space-y-3">
+                        <input type="text" id="input-person" placeholder="ვისზე?" class="w-full p-3 rounded-lg bg-black/20">
+                        <label class="block text-[10px] text-gray-400 uppercase ml-1">დაბრუნების ვადა</label>
+                        <input type="date" id="input-due-date" class="w-full p-3 rounded-lg bg-black/20">
+                    </div>
+                </div>
 
-    // Status ტექსტი
-    document.getElementById("status").innerText = "Firebase Connected ✅";
+                <div class="flex gap-2 pt-4">
+                    <button type="button" onclick="closeModal()" class="flex-1 p-4 rounded-2xl bg-gray-800 font-bold">X</button>
+                    <button type="submit" class="flex-[2] p-4 rounded-2xl bg-pink-600 font-bold shadow-lg shadow-pink-600/20">შენახვა</button>
+                </div>
+                <button type="button" id="delete-btn" onclick="deleteItem()" class="hidden w-full p-2 text-red-500/50 text-xs mt-2">ნივთის წაშლა</button>
+            </form>
+        </div>
+    </div>
 
-    // ღილაკზე დაჭერისას მონაცემის გაგზავნა
-    document.getElementById("sendBtn").addEventListener("click", () => {
+    <script>
+        // --- თქვენი Firebase მონაცემები უკვე ჩასმულია აქ ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBSzgEbtRnLgiYrbCFhgb1fX9_f4cDLWgI",
+            authDomain: "egrisi-79625.firebaseapp.com",
+            databaseURL: "https://egrisi-79625-default-rtdb.firebaseio.com",
+            projectId: "egrisi-79625",
+            storageBucket: "egrisi-79625.firebasestorage.app",
+            messagingSenderId: "110533682613",
+            appId: "1:110533682613:web:3ac71dab90e5972cf265fc"
+        };
 
-      set(ref(db, "testData/message"), {
-        text: "Hello from my website",
-        time: new Date().toISOString()
-      });
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-      alert("Data sent to Firebase ✅");
+        let allItems = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
+        let editingId = null;
 
-    });
-  </script>
+        // ბაზიდან მონაცემების წამოღება რეალურ დროში
+        db.ref('inventory').on('value', (snapshot) => {
+            const data = snapshot.val();
+            allItems = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
+            renderItems();
+            updateStats();
+        });
 
+        function isOverdue(item) {
+            if (item.isCheckedOut && item.dueDate) {
+                return new Date(item.dueDate) < new Date().setHours(0,0,0,0);
+            }
+            return false;
+        }
+
+        function renderItems() {
+            const container = document.getElementById('items-container');
+            let filtered = allItems;
+
+            if (currentFilter === 'overdue') filtered = allItems.filter(isOverdue);
+            else if (currentFilter !== 'all') filtered = allItems.filter(i => i.gender === currentFilter);
+
+            if (searchQuery) {
+                const q = searchQuery.toLowerCase();
+                filtered = filtered.filter(i => i.name.toLowerCase().includes(q) || (i.person && i.person.toLowerCase().includes(q)));
+            }
+
+            container.innerHTML = filtered.map(item => `
+                <div onclick="editItem('${item.id}')" class="item-card p-5 rounded-3xl bg-white/5 active:scale-95 transition-all ${isOverdue(item) ? 'overdue-card' : ''}">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-bold text-lg">${item.name}</h3>
+                            <span class="text-[10px] text-gray-400 uppercase tracking-tighter">${item.gender === 'boys' ? '🧑 ბიჭის' : '👧 გოგონას'}</span>
+                        </div>
+                        <span class="text-[10px] px-2 py-1 rounded-lg bg-white/10">${item.condition}</span>
+                    </div>
+                    <div class="pt-4 border-t border-white/5">
+                        ${item.isCheckedOut ? `
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-pink-400 font-medium">👤 ${item.person}</span>
+                                <span class="${isOverdue(item) ? 'text-red-400 font-bold' : 'text-gray-400'}">📅 ${item.dueDate}</span>
+                            </div>
+                        ` : '<span class="text-xs text-green-500 font-medium">✓ ხელმისაწვდომია</span>'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('input-name').value,
+                gender: document.getElementById('input-gender').value,
+                condition: document.getElementById('input-condition').value,
+                isCheckedOut: document.getElementById('input-checked-out').checked,
+                person: document.getElementById('input-person').value,
+                dueDate: document.getElementById('input-due-date').value
+            };
+
+            if (editingId) await db.ref('inventory/' + editingId).update(data);
+            else await db.ref('inventory').push(data);
+            closeModal();
+        }
+
+        function editItem(id) {
+            editingId = id;
+            const item = allItems.find(i => i.id === id);
+            document.getElementById('modal-title').textContent = "რედაქტირება";
+            document.getElementById('input-name').value = item.name;
+            document.getElementById('input-gender').value = item.gender;
+            document.getElementById('input-condition').value = item.condition;
+            document.getElementById('input-checked-out').checked = item.isCheckedOut;
+            document.getElementById('input-person').value = item.person || '';
+            document.getElementById('input-due-date').value = item.dueDate || '';
+            document.getElementById('delete-btn').classList.remove('hidden');
+            toggleCheckoutFields();
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        async function deleteItem() {
+            if (confirm('წავშალოთ ნივთი?')) {
+                await db.ref('inventory/' + editingId).remove();
+                closeModal();
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('stat-total').textContent = allItems.length;
+            document.getElementById('stat-overdue').textContent = allItems.filter(isOverdue).length;
+        }
+
+        function toggleCheckoutFields() {
+            document.getElementById('checkout-fields').classList.toggle('hidden', !document.getElementById('input-checked-out').checked);
+        }
+
+        function setFilter(f) {
+            currentFilter = f;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
+            renderItems();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('search-input').value;
+            renderItems();
+        }
+
+        function openModal() {
+            editingId = null;
+            document.getElementById('item-form').reset();
+            document.getElementById('modal-title').textContent = "დამატება";
+            document.getElementById('delete-btn').classList.add('hidden');
+            toggleCheckoutFields();
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+    </script>
 </body>
 </html>
