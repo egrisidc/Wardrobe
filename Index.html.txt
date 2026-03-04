@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <title>Egrisi Firebase Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+
+  <h1>Firebase Connection Test</h1>
+  <p id="status">Connecting...</p>
+
+  <button id="sendBtn">Send Test Data</button>
+
+  <script type="module">
+    // Firebase SDK (CDN-იდან)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+    import { 
+      getDatabase, 
+      ref, 
+      set 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    // შენი Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBSzgEbtRnLgiYrbCFhgb1fX9_f4cDLWgI",
+      authDomain: "egrisi-79625.firebaseapp.com",
+      databaseURL: "https://egrisi-79625-default-rtdb.firebaseio.com",
+      projectId: "egrisi-79625",
+      storageBucket: "egrisi-79625.firebasestorage.app",
+      messagingSenderId: "110533682613",
+      appId: "1:110533682613:web:3ac71dab90e5972cf265fc",
+      measurementId: "G-LH27P7S680"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getDatabase(app);
+
+    // Status ტექსტი
+    document.getElementById("status").innerText = "Firebase Connected ✅";
+
+    // ღილაკზე დაჭერისას მონაცემის გაგზავნა
+    document.getElementById("sendBtn").addEventListener("click", () => {
+
+      set(ref(db, "testData/message"), {
+        text: "Hello from my website",
+        time: new Date().toISOString()
+      });
+
+      alert("Data sent to Firebase ✅");
+
+    });
+  </script>
+
+</body>
+</html>
