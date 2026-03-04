@@ -3,81 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ეგრისი - გარდერობი</title>
+    <title>ეგრისი - პროფესიონალური გარდერობი</title>
+    
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode"></script> <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@300;400;600;700&display=swap" rel="stylesheet">
+
     <style>
-        * { font-family: 'Noto Sans Georgian', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: #1a1a2e; color: white; margin: 0; }
-        .item-card { transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.1); }
-        .tab-btn.active { color: #e94560; border-bottom: 3px solid #e94560; opacity: 1; }
+        * { font-family: 'Noto Sans Georgian', sans-serif; }
+        body { background: #0f172a; color: #f8fafc; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .input-style { width: 100%; padding: 12px; border-radius: 12px; background: #1e293b; border: 1px solid #334155; color: white; outline: none; }
+        .input-style:focus { border-color: #ec4899; }
     </style>
 </head>
-<body class="h-full overflow-x-hidden">
-    <div id="app" class="min-h-full pb-10">
-        <header class="sticky top-0 z-40 backdrop-blur-lg bg-[#1a1a2e]/80 border-b border-white/10 p-4">
-            <div class="max-w-6xl mx-auto flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-red-500 rounded-lg flex items-center justify-center">🎭</div>
-                    <div>
-                        <h1 class="text-lg font-bold">ეგრისი</h1>
-                        <p class="text-[10px] text-gray-400 uppercase tracking-widest">ანსამბლი</p>
-                    </div>
-                </div>
-                <button onclick="openModal()" class="bg-pink-600 p-2 rounded-full shadow-lg active:scale-90 transition-transform">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                </button>
+<body class="h-full">
+
+    <div id="app" class="max-w-6xl mx-auto pb-24">
+        <header class="sticky top-0 z-50 glass p-4 mb-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-pink-500 to-violet-500 bg-clip-text text-transparent">ეგრისი გარდერობი</h1>
+                <p class="text-[10px] text-gray-400 uppercase tracking-widest">Advanced Inventory</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="startScanner()" class="bg-slate-700 p-3 rounded-xl">📷</button>
+                <button onclick="openModal()" class="bg-pink-600 px-4 py-2 rounded-xl font-bold text-sm">+ დამატება</button>
             </div>
         </header>
 
-        <div class="max-w-6xl mx-auto px-4 py-6 grid grid-cols-2 gap-4">
-            <div class="bg-white/5 p-4 rounded-2xl border border-white/5 text-center">
-                <div class="text-3xl font-bold" id="stat-total">0</div>
-                <div class="text-xs text-gray-400">ნივთი</div>
+        <div class="px-4 grid grid-cols-2 gap-4 mb-6">
+            <div class="glass p-4 rounded-2xl">
+                <span class="text-gray-400 text-xs block">სულ ნივთები</span>
+                <span id="stat-total" class="text-2xl font-bold">0</span>
             </div>
-            <div class="bg-white/5 p-4 rounded-2xl border border-white/5 text-center">
-                <div class="text-3xl font-bold text-red-500" id="stat-overdue">0</div>
-                <div class="text-xs text-gray-400">ვადაგადაცილებული</div>
+            <div class="glass p-4 rounded-2xl border-l-4 border-pink-500">
+                <span class="text-gray-400 text-xs block">ფერი/კატეგორია</span>
+                <span id="stat-active" class="text-2xl font-bold text-pink-500">0</span>
             </div>
         </div>
-        <main class="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="items-container"></main>
+
+        <div id="items-container" class="px-4 grid gap-4">
+            </div>
+    </div>
+
+    <div id="scanner-modal" class="hidden fixed inset-0 z-[60] bg-black flex flex-col p-4">
+        <div id="reader" class="w-full"></div>
+        <button onclick="stopScanner()" class="mt-4 bg-red-600 p-4 rounded-xl font-bold">გათიშვა</button>
     </div>
 
     <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal()"></div>
-        <div class="relative bg-[#1a1a2e] w-full max-w-md rounded-3xl p-6 border border-white/10 shadow-2xl">
-            <form id="item-form" onsubmit="handleSubmit(event)" class="space-y-4">
-                <h2 id="modal-title" class="text-xl font-bold text-pink-500">დამატება</h2>
-                <input type="text" id="input-name" placeholder="ნივთის სახელი" required class="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none">
+        <div class="absolute inset-0 bg-black/80" onclick="closeModal()"></div>
+        <div class="relative glass w-full max-w-lg rounded-3xl p-6 overflow-y-auto max-h-[90vh]">
+            <h2 class="text-xl font-bold mb-4 text-pink-500">ახალი ნივთის რეგისტრაცია</h2>
+            
+            <form id="item-form" onsubmit="handleSubmit(event)" class="space-y-4 text-sm">
+                <div>
+                    <label class="block mb-1 text-gray-400">ნივთის დასახელება *</label>
+                    <input type="text" id="name" required class="input-style" placeholder="მაგ: ჩოხა">
+                </div>
+
                 <div class="grid grid-cols-2 gap-3">
-                    <select id="input-gender" class="p-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none">
-                        <option value="boys">ბიჭი</option>
-                        <option value="girls">გოგონა</option>
-                    </select>
-                    <select id="input-condition" class="p-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none">
-                        <option value="ახალი">ახალი</option>
-                        <option value="კარგი">კარგი</option>
-                    </select>
+                    <div>
+                        <label class="block mb-1 text-gray-400">კატეგორია</label>
+                        <select id="category" class="input-style">
+                            <option value="კოსტუმი">კოსტუმი</option>
+                            <option value="აქსესუარი">აქსესუარი</option>
+                            <option value="ფეხსაცმელი">ფეხსაცმელი</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block mb-1 text-gray-400">ძირითადი ფერი</label>
+                        <input type="text" id="color" class="input-style" placeholder="მაგ: შავი">
+                    </div>
                 </div>
-                <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl">
-                    <span class="text-sm">გაცემულია?</span>
-                    <input type="checkbox" id="input-checked-out" onchange="toggleCheckoutFields()" class="w-5 h-5 accent-pink-500">
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block mb-1 text-gray-400">სქესი</label>
+                        <select id="gender" class="input-style">
+                            <option value="ბიჭი">ბიჭი</option>
+                            <option value="გოგო">გოგო</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block mb-1 text-gray-400">შტრიხ-კოდი</label>
+                        <input type="text" id="barcode" class="input-style" placeholder="სკანირება ან ჩაწერა">
+                    </div>
                 </div>
-                <div id="checkout-fields" class="hidden space-y-3">
-                    <input type="text" id="input-person" placeholder="ვისზე?" class="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white">
-                    <input type="date" id="input-due-date" class="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white">
+
+                <div class="p-4 bg-white/5 rounded-2xl border border-dashed border-white/20">
+                    <label class="block mb-2 font-bold">გაცემის სტატუსი</label>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="isOut" onchange="document.getElementById('outFields').classList.toggle('hidden')">
+                            <span>გაცემულია მოცეკვავეზე</span>
+                        </div>
+                        <div id="outFields" class="hidden space-y-2">
+                            <input type="text" id="dancer" class="input-style" placeholder="მოცეკვავის სახელი">
+                            <input type="date" id="dueDate" class="input-style">
+                        </div>
+                    </div>
                 </div>
+
+                <div>
+                    <label class="block mb-1 text-gray-400">ფოტოს ბმული (URL)</label>
+                    <input type="url" id="photo" class="input-style" placeholder="https://...">
+                </div>
+
                 <div class="flex gap-2 pt-4">
-                    <button type="button" onclick="closeModal()" class="flex-1 p-4 rounded-2xl bg-gray-800">გაუქმება</button>
-                    <button type="submit" class="flex-[2] p-4 rounded-2xl bg-pink-600 font-bold">შენახვა</button>
+                    <button type="button" onclick="closeModal()" class="flex-1 p-4 rounded-xl bg-slate-700">უკან</button>
+                    <button type="submit" class="flex-[2] p-4 rounded-xl bg-pink-600 font-bold">შენახვა</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
+        // --- FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyBSzgEbtRnLgiYrbCFhgb1fX9_f4cDLWgI",
             authDomain: "egrisi-79625.firebaseapp.com",
@@ -88,74 +131,79 @@
             appId: "1:110533682613:web:3ac71dab90e5972cf265fc"
         };
 
-        try {
-            firebase.initializeApp(firebaseConfig);
-            const db = firebase.database();
-            console.log("Firebase initialized successfully");
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-            let allItems = [];
-
-            db.ref('inventory').on('value', (snapshot) => {
-                const data = snapshot.val();
-                allItems = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
-                renderItems();
-                updateStats();
-            }, (error) => {
-                alert("ბაზასთან კავშირის შეცდომა: " + error.message);
-            });
-
-            function renderItems() {
-                const container = document.getElementById('items-container');
-                container.innerHTML = allItems.map(item => `
-                    <div class="item-card p-5 rounded-3xl bg-white/5">
-                        <h3 class="font-bold text-lg">${item.name}</h3>
-                        <p class="text-xs text-gray-400">${item.gender === 'boys' ? 'ბიჭი' : 'გოგონა'}</p>
-                        <div class="mt-3 pt-3 border-t border-white/5 text-sm">
-                            ${item.isCheckedOut ? `👤 ${item.person} | 📅 ${item.dueDate}` : '✓ გარდერობშია'}
-                        </div>
+        // --- ფუნქციონალი ---
+        function renderItems(items) {
+            const container = document.getElementById('items-container');
+            container.innerHTML = items.map(item => `
+                <div class="glass p-4 rounded-2xl flex gap-4 items-center">
+                    <div class="w-20 h-20 rounded-xl bg-slate-800 flex-shrink-0 overflow-hidden">
+                        ${item.photo ? `<img src="${item.photo}" class="w-full h-full object-cover">` : '<div class="flex items-center justify-center h-full text-2xl">🧥</div>'}
                     </div>
-                `).join('');
-            }
-
-            function updateStats() {
-                document.getElementById('stat-total').textContent = allItems.length;
-            }
-
-            window.openModal = function() {
-                document.getElementById('modal').classList.remove('hidden');
-            };
-
-            window.closeModal = function() {
-                document.getElementById('modal').classList.add('hidden');
-            };
-
-            window.toggleCheckoutFields = function() {
-                const isChecked = document.getElementById('input-checked-out').checked;
-                document.getElementById('checkout-fields').classList.toggle('hidden', !isChecked);
-            };
-
-            window.handleSubmit = async function(e) {
-                e.preventDefault();
-                const data = {
-                    name: document.getElementById('input-name').value,
-                    gender: document.getElementById('input-gender').value,
-                    condition: document.getElementById('input-condition').value,
-                    isCheckedOut: document.getElementById('input-checked-out').checked,
-                    person: document.getElementById('input-person').value || '',
-                    dueDate: document.getElementById('input-due-date').value || ''
-                };
-                try {
-                    await db.ref('inventory').push(data);
-                    closeModal();
-                    document.getElementById('item-form').reset();
-                } catch (err) {
-                    alert("შენახვის შეცდომა: " + err.message);
-                }
-            };
-
-        } catch (e) {
-            alert("კრიტიკული შეცდომა: " + e.message);
+                    <div class="flex-1">
+                        <div class="flex justify-between">
+                            <h3 class="font-bold text-lg">${item.name}</h3>
+                            <span class="text-[10px] bg-pink-500/20 text-pink-400 px-2 py-1 rounded-md">${item.category}</span>
+                        </div>
+                        <p class="text-xs text-gray-400">ფერი: ${item.color || '-'} | სქესი: ${item.gender}</p>
+                        ${item.isOut ? 
+                            `<div class="mt-2 text-xs text-orange-400 font-medium">👤 ${item.dancer} (ვადა: ${item.dueDate})</div>` : 
+                            `<div class="mt-2 text-xs text-green-400">✓ საწყობშია</div>`}
+                    </div>
+                    <button onclick="deleteItem('${item.id}')" class="text-gray-500 text-xs">წაშლა</button>
+                </div>
+            `).join('');
         }
+
+        db.ref('inventory').on('value', (snap) => {
+            const val = snap.val();
+            const items = val ? Object.keys(val).map(k => ({id:k, ...val[k]})) : [];
+            renderItems(items);
+            document.getElementById('stat-total').textContent = items.length;
+            document.getElementById('stat-active').textContent = [...new Set(items.map(i => i.category))].length;
+        });
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('name').value,
+                category: document.getElementById('category').value,
+                color: document.getElementById('color').value,
+                gender: document.getElementById('gender').value,
+                barcode: document.getElementById('barcode').value,
+                isOut: document.getElementById('isOut').checked,
+                dancer: document.getElementById('dancer').value,
+                dueDate: document.getElementById('dueDate').value,
+                photo: document.getElementById('photo').value
+            };
+            await db.ref('inventory').push(data);
+            closeModal();
+            e.target.reset();
+        }
+
+        // --- სკანერი ---
+        let html5QrCode;
+        function startScanner() {
+            document.getElementById('scanner-modal').classList.remove('hidden');
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
+                (decodedText) => {
+                    document.getElementById('barcode').value = decodedText;
+                    stopScanner();
+                    openModal();
+                });
+        }
+        function stopScanner() {
+            if(html5QrCode) html5QrCode.stop().then(() => {
+                document.getElementById('scanner-modal').classList.add('hidden');
+            });
+        }
+
+        function deleteItem(id) { if(confirm('წავშალოთ?')) db.ref('inventory/'+id).remove(); }
+        function openModal() { document.getElementById('modal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
     </script>
 </body>
 </html>
