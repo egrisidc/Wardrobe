@@ -16,20 +16,23 @@
         .tab-active { border-bottom: 4px solid #ec4899; color: #ec4899; font-weight: 700; }
         .input-field { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px; color: white; width: 100%; outline: none; }
         .overdue { border: 2px solid #ef4444 !important; background: rgba(239, 68, 68, 0.1) !important; }
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; padding: 12px 24px; border-radius: 12px; font-weight: bold; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     </style>
 </head>
 <body>
 
+    <div id="toast" class="glass text-white"></div>
+
     <div id="login-screen" class="fixed inset-0 z-[100] bg-[#020617] flex items-center justify-center p-6 text-center">
         <div class="glass p-10 rounded-[3rem] w-full max-w-sm">
             <h2 class="text-2xl font-black mb-8 pink-glow">ეგრისი</h2>
-            <input type="password" id="pass-input" placeholder="პაროლი" class="input-field text-center mb-4">
-            <button onclick="checkPass()" class="w-full p-4 bg-pink-600 rounded-xl font-bold">შესვლა</button>
+            <input type="password" id="pass-input" placeholder="პაროლი" class="input-field text-center mb-4 w-full">
+            <button onclick="checkPass()" class="w-full p-4 bg-pink-600 rounded-xl font-bold active:scale-95 transition-transform">შესვლა</button>
         </div>
     </div>
 
     <div id="app-content" class="hidden">
-        <nav class="sticky top-0 z-50 glass flex justify-around p-5 mb-4">
+        <nav class="sticky top-0 z-50 glass flex justify-around p-5 mb-4 shadow-xl">
             <button onclick="changeSection('all')" id="tab-all" class="pb-1 text-sm tab-active font-bold">ყველა</button>
             <button onclick="changeSection('ბიჭი')" id="tab-ბიჭი" class="pb-1 text-sm">ბიჭი</button>
             <button onclick="changeSection('გოგო')" id="tab-გოგო" class="pb-1 text-sm">გოგონა</button>
@@ -39,10 +42,10 @@
             <input type="text" id="searchInput" oninput="handleSearch()" placeholder="ძებნა (სახელი, გვარი, ID...)" class="input-field w-full mb-6 py-4 px-6 glass border-pink-500/30">
             <div class="flex justify-between items-center mb-6">
                 <div class="glass px-6 py-4 rounded-3xl flex-1 mr-4">
-                    <span class="text-[10px] text-gray-500 uppercase font-bold">რაოდენობა</span>
+                    <span class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">ბაზაშია</span>
                     <div id="total-count" class="text-3xl font-black italic">0</div>
                 </div>
-                <button onclick="openModal()" class="w-16 h-16 bg-pink-600 rounded-2xl text-2xl font-bold shadow-lg shadow-pink-900/40">+</button>
+                <button onclick="openModal()" class="w-16 h-16 bg-pink-600 rounded-2xl text-2xl font-bold shadow-lg shadow-pink-900/40 active:scale-90 transition-transform">+</button>
             </div>
             <div id="main-container" class="space-y-4"></div>
         </div>
@@ -50,77 +53,85 @@
 
     <div id="modal" class="hidden fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div class="absolute inset-0 bg-black/95 backdrop-blur-md" onclick="closeModal()"></div>
-        <div class="relative glass w-full max-w-xl rounded-t-[2.5rem] sm:rounded-[2.5rem] p-6 overflow-y-auto max-h-[95vh]">
-            <div class="flex justify-between mb-6">
-                <h2 id="modal-title" class="text-xl font-black pink-glow uppercase">რეგისტრაცია</h2>
+        <div class="relative glass w-full max-w-xl rounded-t-[2.5rem] sm:rounded-[2.5rem] p-6 overflow-y-auto max-h-[95vh] border-t border-white/10">
+            <div class="flex justify-between items-start mb-6">
+                <h2 id="modal-title" class="text-xl font-black pink-glow uppercase tracking-widest">რეგისტრაცია</h2>
                 <div id="firstUseInfo" class="text-[11px] pink-glow font-bold uppercase italic"></div>
             </div>
             
-            <form id="inventoryForm" onsubmit="saveData(event)" class="space-y-4">
+            <form id="inventoryForm" onsubmit="saveData(event)" class="space-y-5">
                 <input type="hidden" id="edit-id">
                 
                 <div class="flex gap-4 items-center">
                     <div class="flex-1">
-                        <label class="text-[10px] text-gray-400 ml-2 uppercase">ნივთის ID</label>
-                        <input type="text" id="itemID" placeholder="EGR-000" class="input-field mt-1">
+                        <label class="text-[10px] text-gray-400 ml-2 uppercase font-bold">ნივთის ID</label>
+                        <input type="text" id="itemID" placeholder="EGR-000" class="input-field mt-1 w-full">
                     </div>
-                    <label class="relative w-20 h-20 bg-white/5 rounded-2xl border border-dashed border-white/20 flex items-center justify-center cursor-pointer overflow-hidden">
+                    <label class="relative w-24 h-24 bg-white/5 rounded-2xl border-2 border-dashed border-white/10 flex items-center justify-center cursor-pointer overflow-hidden group">
                         <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="previewImage(this)">
                         <img id="imgPreview" class="absolute inset-0 w-full h-full object-cover hidden">
-                        <span id="photoIcon">📸</span>
+                        <span id="photoIcon" class="group-hover:scale-110 transition-transform text-2xl">📸</span>
                     </label>
                 </div>
 
-                <div>
-                    <label class="text-[10px] text-gray-400 ml-2 uppercase">დასახელება</label>
-                    <div class="flex gap-2">
-                        <select id="name" class="input-field"></select>
-                        <button type="button" onclick="manageList('names')" class="bg-pink-600/10 text-pink-500 px-4 rounded-xl">+</button>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-4">
                     <div>
-                        <label class="text-[10px] text-gray-400 ml-2 uppercase">ფერი</label>
-                        <div class="flex gap-2">
-                            <select id="color" class="input-field"></select>
-                            <button type="button" onclick="manageList('colors')" class="bg-pink-600/10 text-pink-500 px-4 rounded-xl">+</button>
+                        <label class="text-[10px] text-gray-400 ml-2 uppercase font-bold">დასახელება</label>
+                        <div class="flex gap-2 mt-1">
+                            <select id="name" class="input-field flex-1"></select>
+                            <button type="button" onclick="manageList('names')" class="bg-pink-600/10 text-pink-500 px-5 rounded-xl font-bold">+</button>
                         </div>
                     </div>
-                    <div>
-                        <label class="text-[10px] text-gray-400 ml-2 uppercase">კატეგორია</label>
-                        <div class="flex gap-2">
-                            <select id="category" class="input-field"></select>
-                            <button type="button" onclick="manageList('categories')" class="bg-pink-600/10 text-pink-500 px-4 rounded-xl">+</button>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] text-gray-400 ml-2 uppercase font-bold">ფერი</label>
+                            <div class="flex gap-2 mt-1">
+                                <select id="color" class="input-field flex-1"></select>
+                                <button type="button" onclick="manageList('colors')" class="bg-pink-600/10 text-pink-500 px-4 rounded-xl font-bold">+</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-400 ml-2 uppercase font-bold">კატეგორია</label>
+                            <div class="flex gap-2 mt-1">
+                                <select id="category" class="input-field flex-1"></select>
+                                <button type="button" onclick="manageList('categories')" class="bg-pink-600/10 text-pink-500 px-4 rounded-xl font-bold">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] text-gray-400 ml-2 uppercase font-bold">სქესი</label>
+                            <select id="gender" class="input-field mt-1 w-full">
+                                <option value="ბიჭი">ბიჭი</option>
+                                <option value="გოგო">გოგო</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-400 ml-2 uppercase font-bold italic">გადაცემის თარიღი</label>
+                            <input type="date" id="firstUse" class="input-field mt-1 w-full">
                         </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <select id="gender" class="input-field">
-                        <option value="ბიჭი">ბიჭი</option>
-                        <option value="გოგო">გოგო</option>
-                    </select>
-                    <input type="date" id="firstUse" class="input-field">
-                </div>
-
-                <div class="p-5 rounded-2xl bg-white/5 border border-white/10">
-                    <div class="flex justify-between mb-4">
-                        <span class="text-sm font-bold text-pink-400">მოცეკვავეზე გაცემა</span>
-                        <input type="checkbox" id="isOut" onchange="toggleOutFields()" class="w-6 h-6">
+                <div class="p-5 rounded-2xl bg-white/5 border border-white/10 shadow-inner">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-sm font-bold text-pink-400 uppercase tracking-tighter">მოცეკვავეზე გაცემა</span>
+                        <input type="checkbox" id="isOut" onchange="toggleOutFields()" class="w-7 h-7 accent-pink-600 cursor-pointer">
                     </div>
                     <div id="assignFields" class="hidden space-y-4">
                         <div class="flex gap-2">
-                            <select id="dancer" class="input-field"></select>
-                            <button type="button" onclick="manageList('dancers')" class="bg-pink-600/10 text-pink-500 px-4 rounded-xl">+</button>
+                            <select id="dancer" class="input-field flex-1"></select>
+                            <button type="button" onclick="manageList('dancers')" class="bg-pink-600/10 text-pink-500 px-4 rounded-xl font-bold">+</button>
                         </div>
-                        <input type="date" id="outDate" class="input-field">
+                        <input type="date" id="outDate" class="input-field w-full">
                     </div>
                 </div>
 
-                <div class="flex gap-3">
-                    <button type="button" onclick="closeModal()" class="flex-1 p-4 bg-slate-800 rounded-xl">უკან</button>
-                    <button type="submit" id="saveBtn" class="flex-[2] p-4 bg-pink-600 rounded-xl font-bold uppercase">შენახვა</button>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeModal()" class="flex-1 p-4 bg-slate-800 rounded-xl font-bold">უკან</button>
+                    <button type="submit" id="saveBtn" class="flex-[2] p-4 bg-pink-600 rounded-xl font-black uppercase tracking-widest shadow-lg shadow-pink-900/30">შენახვა</button>
                 </div>
             </form>
         </div>
@@ -145,9 +156,19 @@
             if(document.getElementById('pass-input').value === 'Egrisi2024') {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-content').classList.remove('hidden');
+                showToast("მოგესალმებით!", "#10b981");
             }
         }
 
+        function showToast(msg, color = "#ec4899") {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.background = color;
+            t.style.opacity = "1";
+            setTimeout(() => t.style.opacity = "0", 2500);
+        }
+
+        // Firebase Listeners
         db.ref('inventory').on('value', snap => {
             const val = snap.val();
             allData = val ? Object.keys(val).map(id => ({id, ...val[id]})) : [];
@@ -196,7 +217,7 @@
                     const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
                     const json = await res.json();
                     photoUrl = json.data.url;
-                } catch(e) { console.error("Photo upload failed"); }
+                } catch(e) { console.error("Upload error"); }
             }
 
             const data = {
@@ -212,10 +233,11 @@
                 photo: photoUrl
             };
 
-            if(id) await db.ref('inventory/' + id).update(data);
+            if(id) await db.ref('inventory').child(id).update(data);
             else await db.ref('inventory').push(data);
 
             closeModal();
+            showToast("მონაცემები შენახულია", "#10b981");
             btn.disabled = false; btn.textContent = "შენახვა";
         }
 
@@ -239,17 +261,17 @@
             container.innerHTML = data.map(item => {
                 const isOverdue = item.isOut && item.outDate && (new Date(item.outDate) < new Date().setHours(0,0,0,0));
                 return `
-                <div class="glass p-5 rounded-[2rem] border-l-4 ${item.gender === 'ბიჭი' ? 'border-blue-500' : 'border-pink-500'} ${isOverdue ? 'overdue' : ''}">
+                <div class="glass p-5 rounded-[2rem] border-l-4 ${item.gender === 'ბიჭი' ? 'border-blue-500' : 'border-pink-500'} ${isOverdue ? 'overdue' : ''} transition-all">
                     <div class="flex gap-4">
                         <div class="w-20 h-20 rounded-2xl bg-white/5 overflow-hidden flex-shrink-0 border border-white/5">
                             ${item.photo ? `<img src="${item.photo}" class="w-full h-full object-cover">` : '<div class="flex h-full items-center justify-center text-2xl opacity-20">🧥</div>'}
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-start">
-                                <h3 class="font-bold truncate pr-2">${item.name}</h3>
+                                <h3 class="font-bold truncate pr-2 text-sm">${item.name}</h3>
                                 <div class="flex gap-2">
-                                    <button onclick="editItem('${item.id}')" class="p-2 glass rounded-lg text-[10px]">✏️</button>
-                                    <button onclick="deleteItem('${item.id}')" class="p-2 glass rounded-lg text-[10px] text-red-500">🗑️</button>
+                                    <button onclick="editItem('${item.id}')" class="p-2 glass rounded-lg text-[10px] hover:bg-pink-500/20">✏️</button>
+                                    <button onclick="deleteItem('${item.id}')" class="p-2 glass rounded-lg text-[10px] text-red-500 hover:bg-red-500/20">🗑️</button>
                                 </div>
                             </div>
                             <p class="text-[10px] text-pink-500 font-black mt-1 uppercase tracking-widest">${item.itemID}</p>
@@ -266,11 +288,18 @@
             }).reverse().join('');
         }
 
+        // --- განახლებული წაშლის ფუნქცია ---
         function deleteItem(id) {
-            if(confirm('ნამდვილად გსურთ წაშლა?')) {
-                db.ref('inventory').child(id).remove()
-                .then(() => { console.log("Deleted"); })
-                .catch(e => { alert("შეცდომა წაშლისას"); });
+            if (!id) return;
+            if(confirm('ნამდვილად გსურთ ამ ნივთის წაშლა?')) {
+                const itemRef = db.ref('inventory').child(id);
+                itemRef.remove()
+                    .then(() => {
+                        showToast("ნივთი წაიშალა", "#ef4444");
+                    })
+                    .catch(err => {
+                        alert("შეცდომა: " + err.message);
+                    });
             }
         }
 
