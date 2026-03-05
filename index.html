@@ -12,128 +12,148 @@
     <style>
         * { font-family: 'Noto Sans Georgian', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: #020617; color: #f8fafc; margin: 0; padding-bottom: 100px; }
-        .glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); }
-        .tab-active { border-bottom: 3px solid #0ea5e9; color: #0ea5e9; font-weight: 700; }
-        .input-field { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px; color: white; width: 100%; outline: none; height: 50px; }
-        .btn-action { height: 50px; border-radius: 12px; font-weight: 700; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
-        .btn-action:active { transform: scale(0.95); }
-        .copy-toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #0ea5e9; color: white; padding: 10px 20px; border-radius: 30px; font-size: 12px; font-weight: bold; z-index: 1000; display: none; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .pink-glow { text-shadow: 0 0 10px rgba(236, 72, 153, 0.5); color: #ec4899; }
+        .tab-active { border-bottom: 4px solid #ec4899; color: #ec4899; font-weight: 700; }
+        .input-field { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px; color: white; width: 100%; outline: none; height: 48px; }
+        .btn-plus { background: rgba(236, 72, 153, 0.1); color: #ec4899; width: 48px; height: 48px; border-radius: 12px; font-weight: bold; }
+        .copy-toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #ec4899; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; z-index: 1000; display: none; }
+        
+        /* PDF Specific Fixes */
+        #pdf-content { color: black !important; }
+        .pdf-mode .glass { background: white !important; border: 1px solid #ddd !important; color: black !important; backdrop-filter: none !important; }
+        .pdf-mode * { color: black !important; text-shadow: none !important; }
     </style>
 </head>
-<body class="bg-[#020617]">
+<body>
 
-    <div id="copyToast" class="copy-toast shadow-2xl">დაკოპირდა! ✅</div>
+    <div id="copyToast" class="copy-toast shadow-lg">დაკოპირდა! ✅</div>
 
-    <div id="login-screen" class="fixed inset-0 z-[100] bg-[#020617] flex items-center justify-center p-6">
-        <div class="glass p-8 rounded-[2.5rem] w-full max-w-sm text-center">
-            <img src="https://i.ibb.co/3mN9hGqX/image.png" class="w-24 mx-auto mb-8 drop-shadow-2xl" alt="Egrisi">
-            <input type="password" id="pass-input" placeholder="პაროლი" class="input-field text-center mb-4 tracking-[0.3em]">
-            <div class="flex gap-2">
-                <button onclick="checkPass()" class="flex-1 btn-action bg-sky-600 text-white">შესვლა</button>
-                <button id="bio-auth-btn" onclick="tryBiometric()" class="hidden w-14 btn-action bg-white/5 border border-white/10 text-xl">🆔</button>
-            </div>
+    <div id="login-screen" class="fixed inset-0 z-[100] bg-[#020617] flex items-center justify-center p-6 text-center">
+        <div class="glass p-10 rounded-[3rem] w-full max-w-sm">
+            <h2 class="text-3xl font-black mb-8 pink-glow uppercase italic tracking-tighter">ეგრისი</h2>
+            <input type="password" id="pass-input" placeholder="პაროლი" class="input-field text-center mb-4">
+            <button onclick="checkPass()" class="w-full p-4 bg-pink-600 rounded-xl font-bold">შესვლა</button>
         </div>
     </div>
 
     <div id="app-content" class="hidden">
         <header class="p-8 text-center">
-            <img src="https://i.ibb.co/3mN9hGqX/image.png" class="w-20 mx-auto opacity-90" alt="Logo">
-            <h1 class="text-[10px] uppercase tracking-[0.5em] mt-4 text-sky-500/50 font-bold">Inventory System</h1>
+            <h1 class="text-4xl font-black pink-glow uppercase italic tracking-tighter">ეგრისი</h1>
+            <p class="text-[10px] uppercase tracking-[0.4em] opacity-40 mt-2">Inventory Management</p>
         </header>
 
-        <div class="max-w-2xl mx-auto px-4 grid grid-cols-3 gap-3 mb-6">
-            <div onclick="filterByStat('all')" class="glass p-4 rounded-2xl text-center">
-                <span class="text-[9px] text-gray-500 uppercase block mb-1">სულ</span>
-                <b id="stat-total" class="text-xl">0</b>
+        <div class="max-w-2xl mx-auto px-4 grid grid-cols-3 gap-2">
+            <div onclick="filterByStat('all')" class="glass p-3 rounded-2xl text-center cursor-pointer">
+                <p class="text-[9px] text-gray-500 uppercase font-bold">ყველა</p>
+                <p id="stat-total" class="text-xl font-black">0</p>
             </div>
-            <div onclick="filterByStat('out')" class="glass p-4 rounded-2xl text-center border-b-2 border-sky-500">
-                <span class="text-[9px] text-sky-500 uppercase block mb-1">გაცემული</span>
-                <b id="stat-out" class="text-xl">0</b>
+            <div onclick="filterByStat('out')" class="glass p-3 rounded-2xl text-center cursor-pointer border-b-2 border-pink-500">
+                <p class="text-[9px] text-pink-500 uppercase font-bold">გაცემული</p>
+                <p id="stat-out" class="text-xl font-black">0</p>
             </div>
-            <div onclick="filterByStat('in')" class="glass p-4 rounded-2xl text-center border-b-2 border-green-500">
-                <span class="text-[9px] text-green-500 uppercase block mb-1">რეზერვი</span>
-                <b id="stat-in" class="text-xl">0</b>
+            <div onclick="filterByStat('in')" class="glass p-3 rounded-2xl text-center cursor-pointer border-b-2 border-green-500">
+                <p class="text-[9px] text-green-500 uppercase font-bold">რეზერვი</p>
+                <p id="stat-in" class="text-xl font-black">0</p>
             </div>
         </div>
 
-        <nav class="sticky top-0 z-50 glass flex justify-around p-4 mx-4 rounded-2xl mb-6">
-            <button onclick="changeSection('all')" id="tab-all" class="text-[10px] uppercase tab-active">ყველა</button>
-            <button onclick="changeSection('ბიჭი')" id="tab-ბიჭი" class="text-[10px] uppercase">ვაჟი</button>
-            <button onclick="changeSection('გოგო')" id="tab-გოგო" class="text-[10px] uppercase">გოგონა</button>
-            <button onclick="changeSection('reserve')" id="tab-reserve" class="text-[10px] uppercase">📦 რეზერვი</button>
+        <nav class="sticky top-0 z-50 glass flex justify-around p-5 my-4">
+            <button onclick="changeSection('all')" id="tab-all" class="pb-1 text-xs tab-active">ყველა</button>
+            <button onclick="changeSection('ბიჭი')" id="tab-ბიჭი" class="pb-1 text-xs">ბიჭი</button>
+            <button onclick="changeSection('გოგო')" id="tab-გოგო" class="pb-1 text-xs">გოგონა</button>
+            <button onclick="changeSection('reserve')" id="tab-reserve" class="pb-1 text-xs">📦 რეზერვი</button>
         </nav>
 
         <div class="max-w-2xl mx-auto px-4">
-            <div class="flex gap-2 mb-6">
-                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="ძიება..." class="input-field flex-1 glass border-none px-6">
-                <button onclick="openModal()" class="w-14 btn-action bg-sky-600 text-2xl shadow-lg shadow-sky-900/20">+</button>
-            </div>
+            <input type="text" id="searchInput" oninput="handleSearch()" placeholder="ძებნა..." class="input-field w-full mb-4 py-4 px-6 glass border-pink-500/30">
             
-            <button onclick="exportToPDF()" class="w-full btn-action bg-slate-800 text-[10px] uppercase tracking-widest mb-8">📄 PDF ექსპორტი</button>
+            <div class="flex gap-2 mb-6">
+                <button onclick="exportToPDF()" class="flex-1 bg-slate-800 p-4 rounded-2xl font-bold text-xs uppercase">📄 PDF რეპორტი</button>
+                <button onclick="openModal()" class="w-20 bg-pink-600 rounded-2xl text-2xl font-bold">+</button>
+            </div>
 
-            <div id="pdf-content" class="space-y-4 pb-24">
-                <div id="main-container" class="space-y-4"></div>
+            <div id="pdf-content">
+                <div id="main-container" class="space-y-4 pb-20"></div>
             </div>
         </div>
     </div>
 
     <div id="modal" class="hidden fixed inset-0 z-[150] flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div class="absolute inset-0 bg-black/95 backdrop-blur-md" onclick="closeModal()"></div>
-        <div class="relative glass w-full max-w-xl rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 overflow-y-auto max-h-[90vh]">
-            <h2 id="modal-title" class="text-xl font-bold text-sky-400 mb-6 uppercase tracking-tight">ნივთის რეგისტრაცია</h2>
+        <div class="relative glass w-full max-w-xl rounded-t-[2.5rem] sm:rounded-[2.5rem] p-6 overflow-y-auto max-h-[95vh]">
+            <h2 id="modal-title" class="text-xl font-black pink-glow uppercase mb-6">რეგისტრაცია</h2>
             <form id="inventoryForm" onsubmit="saveData(event)" class="space-y-4">
                 <input type="hidden" id="edit-id">
                 
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="text" id="itemID" placeholder="EGR-0000" class="input-field">
-                    <label class="btn-action bg-white/5 border border-dashed border-white/20 cursor-pointer overflow-hidden relative">
+                <div class="flex gap-4">
+                    <div class="flex-1 space-y-4">
+                        <div>
+                            <label class="text-[10px] text-gray-400 font-bold uppercase ml-2">ID</label>
+                            <input type="text" id="itemID" placeholder="EGR-0000" class="input-field mt-1">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-400 font-bold uppercase ml-2">სქესი</label>
+                            <select id="gender" class="input-field mt-1">
+                                <option value="ბიჭი">ბიჭი</option>
+                                <option value="გოგო">გოგონა</option>
+                            </select>
+                        </div>
+                    </div>
+                    <label class="w-32 h-32 bg-white/5 rounded-2xl border-2 border-dashed border-white/10 flex items-center justify-center cursor-pointer relative overflow-hidden">
                         <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="previewImage(this)">
-                        <span id="photoIcon">📸 ფოტო</span>
                         <img id="imgPreview" class="absolute inset-0 w-full h-full object-cover hidden">
+                        <span id="photoIcon" class="text-2xl">📸</span>
                     </label>
                 </div>
 
-                <div class="flex gap-2">
-                    <select id="name" class="input-field flex-1"></select>
-                    <button type="button" onclick="manageList('names')" class="w-14 btn-action bg-sky-500/10 text-sky-500">+</button>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="flex gap-2">
-                        <select id="category" class="input-field flex-1"></select>
-                        <button type="button" onclick="manageList('categories')" class="w-12 btn-action bg-sky-500/10 text-sky-500 text-xs">+</button>
-                    </div>
-                    <div class="flex gap-2">
-                        <select id="color" class="input-field flex-1"></select>
-                        <button type="button" onclick="manageList('colors')" class="w-12 btn-action bg-sky-500/10 text-sky-500 text-xs">+</button>
+                <div>
+                    <label class="text-[10px] text-gray-400 font-bold uppercase ml-2">დასახელება</label>
+                    <div class="flex gap-2 mt-1">
+                        <select id="name" class="input-field flex-1"></select>
+                        <button type="button" onclick="manageList('names')" class="btn-plus">+</button>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="date" id="firstUse" class="input-field" title="გადაცემის თარიღი">
-                    <select id="gender" class="input-field">
-                        <option value="ბიჭი">ვაჟი</option>
-                        <option value="გოგო">გოგონა</option>
-                    </select>
+                    <div>
+                        <label class="text-[10px] text-gray-400 font-bold uppercase ml-2">კატეგორია</label>
+                        <div class="flex gap-2 mt-1">
+                            <select id="category" class="input-field flex-1"></select>
+                            <button type="button" onclick="manageList('categories')" class="btn-plus">+</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-gray-400 font-bold uppercase ml-2">ფერი</label>
+                        <div class="flex gap-2 mt-1">
+                            <select id="color" class="input-field flex-1"></select>
+                            <button type="button" onclick="manageList('colors')" class="btn-plus">+</button>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-xs font-bold text-sky-400 uppercase">გაცემა მოცეკვავეზე</span>
-                        <input type="checkbox" id="isOut" onchange="toggleOutFields()" class="w-6 h-6 accent-sky-500">
+                <div>
+                    <label class="text-[10px] text-gray-400 font-bold uppercase ml-2">პირველი გადაცემა (თარიღი)</label>
+                    <input type="date" id="firstUse" class="input-field mt-1">
+                </div>
+
+                <div class="p-5 rounded-2xl bg-white/5 border border-white/10">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-bold text-pink-400 uppercase">გაცემა მოცეკვავეზე</span>
+                        <input type="checkbox" id="isOut" onchange="toggleOutFields()" class="w-7 h-7 accent-pink-600">
                     </div>
-                    <div id="assignFields" class="hidden space-y-4">
+                    <div id="assignFields" class="hidden space-y-4 mt-4">
                         <div class="flex gap-2">
                             <select id="dancer" class="input-field flex-1"></select>
-                            <button type="button" onclick="manageList('dancers')" class="w-14 btn-action bg-sky-500/10 text-sky-500">+</button>
+                            <button type="button" onclick="manageList('dancers')" class="btn-plus">+</button>
                         </div>
                         <input type="date" id="outDate" class="input-field">
                     </div>
                 </div>
 
                 <div class="flex gap-3 pt-4">
-                    <button type="button" onclick="closeModal()" class="flex-1 btn-action bg-slate-800 text-xs uppercase">უკან</button>
-                    <button type="submit" id="saveBtn" class="flex-[2] btn-action bg-sky-600 text-xs uppercase">შენახვა</button>
+                    <button type="button" onclick="closeModal()" class="flex-1 p-4 bg-slate-800 rounded-xl font-bold uppercase">უკან</button>
+                    <button type="submit" id="saveBtn" class="flex-[2] p-4 bg-pink-600 rounded-xl font-black uppercase">შენახვა</button>
                 </div>
             </form>
         </div>
@@ -153,40 +173,25 @@
         let allData = [];
         let currentSection = 'all';
 
-        // --- AUTH & BIOMETRIC ---
         function checkPass() {
-            if(document.getElementById('pass-input').value === 'Egrisi_2026') loginSuccess();
-            else alert("არასწორია!");
-        }
-
-        function loginSuccess() {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('app-content').classList.remove('hidden');
-            if(window.location.protocol === 'https:' && !localStorage.getItem('bio_enabled')) {
-                if(confirm("ჩავრთოთ თითის ანაბეჭდით შესვლა?")) localStorage.setItem('bio_enabled', 'true');
+            if(document.getElementById('pass-input').value === 'Egrisi_2026') { 
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-content').classList.remove('hidden');
             }
         }
 
-        async function tryBiometric() {
-            // HTTPS-ზე აქ ნამდვილი FaceID/Fingerprint იმუშავებს
-            if(localStorage.getItem('bio_enabled')) loginSuccess();
-        }
-
-        if(localStorage.getItem('bio_enabled')) document.getElementById('bio-auth-btn').classList.remove('hidden');
-
-        // --- CORE ---
         db.ref('inventory').on('value', snap => {
-            const v = snap.val();
-            allData = v ? Object.keys(v).map(id => ({id, ...v[id]})) : [];
+            const val = snap.val();
+            allData = val ? Object.keys(val).map(id => ({id, ...val[id]})) : [];
             updateStats();
             renderUI();
         });
 
         function updateStats() {
-            const out = allData.filter(i => i.isOut).length;
+            const outCount = allData.filter(i => i.isOut).length;
             document.getElementById('stat-total').textContent = allData.length;
-            document.getElementById('stat-out').textContent = out;
-            document.getElementById('stat-in').textContent = allData.length - out;
+            document.getElementById('stat-out').textContent = outCount;
+            document.getElementById('stat-in').textContent = allData.length - outCount;
         }
 
         function renderUI(dataToUse = null) {
@@ -198,46 +203,47 @@
             }
 
             container.innerHTML = data.map(item => `
-                <div class="glass p-5 rounded-[2rem] border-l-4 ${item.gender === 'ბიჭი' ? 'border-sky-500' : 'border-pink-500'}">
+                <div class="glass p-5 rounded-[2rem] border-l-4 ${item.gender === 'ბიჭი' ? 'border-blue-500' : 'border-pink-500'}">
                     <div class="flex gap-4">
-                        <div class="w-20 h-20 rounded-2xl bg-white/5 overflow-hidden border border-white/5">
-                            ${item.photo ? `<img src="${item.photo}" class="w-full h-full object-cover">` : '<div class="flex h-full items-center justify-center opacity-20 text-2xl">E</div>'}
+                        <div class="w-20 h-20 rounded-2xl bg-white/5 overflow-hidden border border-white/5 flex-shrink-0">
+                            ${item.photo ? `<img src="${item.photo}" class="w-full h-full object-cover">` : '<div class="flex h-full items-center justify-center opacity-20 text-2xl font-black">E</div>'}
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-start">
-                                <h3 class="font-bold text-sm truncate">${item.name || '---'}</h3>
+                                <h3 class="font-bold text-[15px] truncate">${item.name || 'უსახელო'}</h3>
                                 <div class="flex gap-3">
-                                    <button onclick="editItem('${item.id}')" class="opacity-40">✏️</button>
-                                    <button onclick="deleteItem('${item.id}')" class="text-red-500 opacity-40">🗑️</button>
+                                    <button onclick="editItem('${item.id}')" class="text-lg">✏️</button>
+                                    <button onclick="deleteItem('${item.id}')" class="text-lg text-red-500/50">🗑️</button>
                                 </div>
                             </div>
-                            <p class="text-[10px] text-sky-400 font-bold uppercase mt-1 tracking-widest">${item.itemID}</p>
-                            <p class="text-[9px] text-gray-500 uppercase mt-1">${item.category || ''} ${item.color ? '• '+item.color : ''}</p>
-                            ${item.firstUse ? `<p class="text-[9px] text-sky-500/50 mt-1 italic font-bold">📅 ${item.firstUse}</p>` : ''}
+                            <p class="text-[11px] text-pink-500 font-black uppercase mt-0.5">${item.itemID}</p>
+                            <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-tighter">
+                                ${item.category || ''} ${item.color ? '• ' + item.color : ''}
+                            </p>
+                            ${item.firstUse ? `<p class="text-[9px] text-pink-400 font-bold mt-1 italic">📅 გადაეცა: ${item.firstUse}</p>` : ''}
                         </div>
                     </div>
                     ${item.isOut ? `
-                    <div onclick="copyToClipboard('${item.dancer}')" class="mt-4 p-3 bg-white/5 rounded-xl flex justify-between items-center text-[10px] border border-white/5 cursor-copy">
-                        <span class="text-sky-400 font-bold">👤 ${item.dancer}</span>
-                        <span class="text-gray-500">${item.outDate || ''}</span>
-                    </div>` : '<div class="mt-3 text-[8px] text-green-500 font-bold uppercase tracking-widest opacity-60 text-center">📦 რეზერვშია</div>'}
+                    <div onclick="copyToClipboard('${item.dancer}')" class="mt-4 p-3 bg-white/5 rounded-xl flex justify-between items-center text-[11px] border border-white/5 cursor-copy active:bg-pink-600/20">
+                        <span class="text-pink-400 font-bold">👤 ${item.dancer}</span>
+                        <span class="text-gray-500">📅 ${item.outDate || ''}</span>
+                    </div>` : '<div class="mt-3 text-[9px] text-green-500 font-bold uppercase tracking-widest opacity-80 text-center">📦 რეზერვშია</div>'}
                 </div>
             `).reverse().join('');
         }
 
         // --- HANDLERS ---
-        function copyToClipboard(t) { navigator.clipboard.writeText(t); const toast = document.getElementById('copyToast'); toast.style.display = 'block'; setTimeout(() => toast.style.display='none', 2000); }
-        function openModal() { document.getElementById('inventoryForm').reset(); document.getElementById('edit-id').value = ""; document.getElementById('imgPreview').classList.add('hidden'); document.getElementById('photoIcon').classList.remove('hidden'); document.getElementById('modal').classList.remove('hidden'); }
+        function copyToClipboard(t) { navigator.clipboard.writeText(t); const toast = document.getElementById('copyToast'); toast.style.display='block'; setTimeout(() => toast.style.display='none', 2000); }
+        function openModal() { document.getElementById('inventoryForm').reset(); document.getElementById('edit-id').value=""; document.getElementById('imgPreview').classList.add('hidden'); document.getElementById('photoIcon').classList.remove('hidden'); document.getElementById('modal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('modal').classList.add('hidden'); }
         function toggleOutFields() { document.getElementById('assignFields').classList.toggle('hidden', !document.getElementById('isOut').checked); }
         function previewImage(input) { if (input.files && input.files[0]) { const r = new FileReader(); r.onload = e => { document.getElementById('imgPreview').src = e.target.result; document.getElementById('imgPreview').classList.remove('hidden'); document.getElementById('photoIcon').classList.add('hidden'); }; r.readAsDataURL(input.files[0]); } }
         function changeSection(s) { currentSection = s; document.querySelectorAll('nav button').forEach(b => b.classList.remove('tab-active')); document.getElementById('tab-'+s).classList.add('tab-active'); renderUI(); }
-        function deleteItem(id) { if(confirm('წავშალოთ?')) db.ref('inventory/' + id).remove(); }
-        
+        function deleteItem(id) { if(confirm('წავშალოთ ნივთი?')) db.ref('inventory/' + id).remove(); }
+
         async function saveData(e) {
             e.preventDefault();
-            const btn = document.getElementById('saveBtn');
-            btn.disabled = true; btn.textContent = "...";
+            const btn = document.getElementById('saveBtn'); btn.disabled = true; btn.textContent = "...";
             const id = document.getElementById('edit-id').value;
             let photoUrl = id ? (allData.find(x => x.id === id)?.photo || "") : "";
             const file = document.getElementById('photoInput').files[0];
@@ -309,7 +315,20 @@
         }
 
         function exportToPDF() {
-            html2pdf().set({ margin: 10, filename: 'Egrisi_Inventory.pdf', html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(document.getElementById('pdf-content')).save();
+            const element = document.getElementById('pdf-content');
+            element.classList.add('pdf-mode'); // Apply PDF styles
+            
+            const opt = {
+                margin: 10,
+                filename: 'Egrisi_Inventory.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.classList.remove('pdf-mode');
+            });
         }
     </script>
 </body>
