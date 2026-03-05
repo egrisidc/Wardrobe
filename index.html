@@ -15,11 +15,13 @@
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
         .pink-glow { text-shadow: 0 0 10px rgba(236, 72, 153, 0.5); color: #ec4899; }
         .tab-active { border-bottom: 4px solid #ec4899; color: #ec4899; font-weight: 700; }
-        .input-field { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px; color: white; width: 100%; outline: none; }
-        .stat-card:active { transform: scale(0.95); transition: 0.2s; }
+        .input-field { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px; color: white; width: 100%; outline: none; font-size: 14px; }
+        .copy-toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #ec4899; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; z-index: 1000; display: none; }
     </style>
 </head>
 <body>
+
+    <div id="copyToast" class="copy-toast shadow-lg">დაკოპირდა! ✅</div>
 
     <div id="lightbox" class="hidden fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4" onclick="this.classList.add('hidden')">
         <img id="lightbox-img" class="max-w-full max-h-full rounded-2xl">
@@ -35,15 +37,15 @@
 
     <div id="app-content" class="hidden">
         <div class="max-w-2xl mx-auto px-4 pt-6 grid grid-cols-3 gap-2">
-            <div onclick="filterByStat('all')" class="stat-card glass p-3 rounded-2xl text-center cursor-pointer border border-transparent hover:border-white/20">
+            <div onclick="filterByStat('all')" class="glass p-3 rounded-2xl text-center cursor-pointer border border-transparent hover:border-white/20">
                 <p class="text-[9px] text-gray-500 uppercase font-bold">ყველა</p>
                 <p id="stat-total" class="text-xl font-black">0</p>
             </div>
-            <div onclick="filterByStat('out')" class="stat-card glass p-3 rounded-2xl text-center cursor-pointer border border-transparent hover:border-pink-500/50">
+            <div onclick="filterByStat('out')" class="glass p-3 rounded-2xl text-center cursor-pointer border border-transparent hover:border-pink-500/50">
                 <p class="text-[9px] text-pink-500 uppercase font-bold">გაცემული</p>
                 <p id="stat-out" class="text-xl font-black">0</p>
             </div>
-            <div onclick="filterByStat('in')" class="stat-card glass p-3 rounded-2xl text-center cursor-pointer border border-transparent hover:border-green-500/50">
+            <div onclick="filterByStat('in')" class="glass p-3 rounded-2xl text-center cursor-pointer border border-transparent hover:border-green-500/50">
                 <p class="text-[9px] text-green-500 uppercase font-bold">რეზერვი</p>
                 <p id="stat-in" class="text-xl font-black">0</p>
             </div>
@@ -57,7 +59,7 @@
         </nav>
 
         <div class="max-w-2xl mx-auto px-4">
-            <input type="text" id="searchInput" oninput="handleSearch()" placeholder="ძებნა (მაგ: chokha ან ჩოხა)" class="input-field w-full mb-4 py-4 px-6 glass border-pink-500/30">
+            <input type="text" id="searchInput" oninput="handleSearch()" placeholder="ძებნა (ID, სახელი...)" class="input-field w-full mb-4 py-4 px-6 glass border-pink-500/30">
             
             <div class="flex gap-2 mb-6">
                 <button onclick="exportToPDF()" class="flex-1 bg-slate-800 p-4 rounded-2xl font-bold text-xs uppercase">📄 PDF რეპორტი</button>
@@ -78,8 +80,8 @@
                 <input type="hidden" id="edit-id">
                 <div class="flex gap-4">
                     <div class="flex-1">
-                        <label class="text-[10px] text-gray-400 font-bold uppercase ml-2">ნივთის ID</label>
-                        <input type="text" id="itemID" placeholder="EGR-000" class="input-field mt-1">
+                        <label class="text-[10px] text-gray-400 font-bold uppercase ml-2">ID</label>
+                        <input type="text" id="itemID" placeholder="EGR-1208" class="input-field mt-1">
                     </div>
                     <label class="relative w-24 h-24 bg-white/5 rounded-2xl border-2 border-dashed border-white/10 flex items-center justify-center cursor-pointer">
                         <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="previewImage(this)">
@@ -87,26 +89,38 @@
                         <span id="photoIcon">📸</span>
                     </label>
                 </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-[10px] text-gray-400 font-bold uppercase ml-2">დასახელება</label>
                         <div class="flex gap-2 mt-1">
                             <select id="name" class="input-field flex-1"></select>
-                            <button type="button" onclick="manageList('names')" class="bg-pink-600/10 text-pink-500 px-4 rounded-xl">+</button>
+                            <button type="button" onclick="manageList('names')" class="bg-pink-600/10 text-pink-500 px-3 rounded-xl">+</button>
                         </div>
                     </div>
                     <div>
-                        <label class="text-[10px] text-gray-400 font-bold uppercase ml-2">გამოყენების თარიღი</label>
-                        <input type="date" id="firstUse" class="input-field mt-1">
+                        <label class="text-[10px] text-gray-400 font-bold uppercase ml-2">კატეგორია</label>
+                        <div class="flex gap-2 mt-1">
+                            <select id="category" class="input-field flex-1"></select>
+                            <button type="button" onclick="manageList('categories')" class="bg-pink-600/10 text-pink-500 px-3 rounded-xl">+</button>
+                        </div>
                     </div>
                 </div>
+
                 <div class="grid grid-cols-2 gap-4">
-                    <select id="category" class="input-field"></select>
-                    <select id="gender" class="input-field">
-                        <option value="ბიჭი">ბიჭი</option>
-                        <option value="გოგო">გოგო</option>
-                    </select>
+                    <div>
+                        <label class="text-[10px] text-gray-400 font-bold uppercase ml-2">პირველი გადაცემა</label>
+                        <input type="date" id="firstUse" class="input-field mt-1">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-gray-400 font-bold uppercase ml-2 italic">სქესი</label>
+                        <select id="gender" class="input-field mt-1 h-[46px] py-1">
+                            <option value="ბიჭი">ბიჭი</option>
+                            <option value="გოგო">გოგო</option>
+                        </select>
+                    </div>
                 </div>
+
                 <div class="p-5 rounded-2xl bg-white/5 border border-white/10">
                     <div class="flex justify-between items-center mb-4">
                         <span class="text-sm font-bold text-pink-400 uppercase">გაცემა მოცეკვავეზე</span>
@@ -120,6 +134,7 @@
                         <input type="date" id="outDate" class="input-field w-full">
                     </div>
                 </div>
+
                 <div class="flex gap-3 pt-2">
                     <button type="button" onclick="closeModal()" class="flex-1 p-4 bg-slate-800 rounded-xl font-bold">უკან</button>
                     <button type="submit" id="saveBtn" class="flex-[2] p-4 bg-pink-600 rounded-xl font-black uppercase">შენახვა</button>
@@ -144,7 +159,6 @@
         const geoMap = {"a":"ა","b":"ბ","c":"ც","d":"დ","e":"ე","f":"ფ","g":"გ","h":"ჰ","i":"ი","j":"ჯ","k":"კ","l":"ლ","m":"მ","n":"ნ","o":"ო","p":"პ","q":"ქ","r":"რ","s":"ს","t":"ტ","u":"უ","v":"ვ","w":"წ","x":"ხ","y":"ყ","z":"ზ","R":"ღ","S":"შ","T":"თ","W":"ჭ","Z":"ძ","C":"ჩ"};
 
         function checkPass() {
-            // აქ ჩაწერე შენი ახალი პაროლი
             if(document.getElementById('pass-input').value === 'Egrisi_2026') { 
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-content').classList.remove('hidden');
@@ -166,11 +180,18 @@
         }
 
         function filterByStat(type) {
-            let filtered;
-            if(type === 'out') filtered = allData.filter(i => i.isOut);
-            else if(type === 'in') filtered = allData.filter(i => !i.isOut);
-            else filtered = allData;
-            renderUI(filtered);
+            if(type === 'out') renderUI(allData.filter(i => i.isOut));
+            else if(type === 'in') renderUI(allData.filter(i => !i.isOut));
+            else renderUI(allData);
+        }
+
+        function copyToClipboard(text) {
+            if(!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = document.getElementById('copyToast');
+                toast.style.display = 'block';
+                setTimeout(() => { toast.style.display = 'none'; }, 2000);
+            });
         }
 
         function renderUI(dataToUse = null) {
@@ -184,61 +205,49 @@
 
             container.innerHTML = data.map(item => `
                 <div class="glass p-5 rounded-[2rem] border-l-4 ${item.gender === 'ბიჭი' ? 'border-blue-500' : 'border-pink-500'}">
-                    <div class="flex gap-4 relative">
-                        <div class="absolute top-0 right-0 text-[9px] text-pink-400 font-bold uppercase italic">${item.firstUse || ''}</div>
-                        <div onclick="zoomImage('${item.photo}')" class="w-20 h-20 rounded-2xl bg-white/5 overflow-hidden flex-shrink-0 border border-white/5">
+                    <div class="flex gap-4">
+                        <div onclick="zoomImage('${item.photo}')" class="w-20 h-20 rounded-2xl bg-white/5 overflow-hidden flex-shrink-0 border border-white/5 cursor-pointer">
                             ${item.photo ? `<img src="${item.photo}" class="w-full h-full object-cover">` : '<div class="flex h-full items-center justify-center text-2xl opacity-20">🧥</div>'}
                         </div>
                         <div class="flex-1 min-w-0">
-                            <div class="flex justify-between">
-                                <h3 class="font-bold truncate text-sm">${item.name || 'უსახელო'}</h3>
-                                <div class="flex gap-2">
-                                    <button onclick="editItem('${item.id}')" class="p-1 opacity-50 hover:opacity-100">✏️</button>
-                                    <button onclick="deleteItem('${item.id}')" class="p-1 text-red-500 opacity-50 hover:opacity-100">🗑️</button>
+                            <div class="flex justify-between items-start">
+                                <h3 class="font-bold truncate text-[15px]">${item.name || 'უსახელო'}</h3>
+                                <div class="flex gap-3">
+                                    <button onclick="editItem('${item.id}')" class="text-lg">✏️</button>
+                                    <button onclick="deleteItem('${item.id}')" class="text-lg text-red-500 opacity-70">🗑️</button>
                                 </div>
                             </div>
-                            <p class="text-[10px] text-pink-500 font-black uppercase mt-1">${item.itemID}</p>
-                            <p class="text-[9px] text-gray-500">${item.category || ''}</p>
+                            <p class="text-[11px] text-pink-500 font-black uppercase mt-0.5">${item.itemID}</p>
+                            <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-tighter">${item.category || ''}</p>
+                            ${item.firstUse ? `<p class="text-[9px] text-pink-400/80 font-bold mt-1 italic">📅 გადაეცა: ${item.firstUse}</p>` : ''}
                         </div>
                     </div>
                     ${item.isOut ? `
-                    <div class="mt-4 p-3 bg-black/40 rounded-xl flex justify-between items-center text-[11px] border border-white/5">
+                    <div onclick="copyToClipboard('${item.dancer}')" class="mt-4 p-3 bg-white/5 rounded-xl flex justify-between items-center text-[11px] border border-white/5 cursor-copy active:bg-white/10 transition-colors">
                         <span class="text-pink-400 font-bold">👤 ${item.dancer}</span>
-                        <span class="text-gray-400">📅 ${item.outDate}</span>
-                    </div>` : '<div class="mt-2 text-[9px] text-green-500 font-bold uppercase">📦 ადგილზეა (რეზერვი)</div>'}
+                        <span class="text-gray-500">📅 ${item.outDate || ''}</span>
+                    </div>` : '<div class="mt-3 text-[9px] text-green-500 font-bold uppercase tracking-widest opacity-80">📦 რეზერვშია</div>'}
                 </div>
             `).reverse().join('');
         }
 
         async function exportToPDF() {
             const element = document.getElementById('pdf-content');
-            const opt = {
-                margin: 10,
-                filename: 'egrisi_inventory.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            html2pdf().set(opt).from(element).save();
+            html2pdf().set({ margin: 10, filename: 'egrisi_inventory.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(element).save();
         }
 
         function handleSearch() {
             let q = document.getElementById('searchInput').value;
             let convertedQ = q.split('').map(char => geoMap[char] || char).join('').toLowerCase();
-            const filtered = allData.filter(i => 
-                (i.name && i.name.toLowerCase().includes(convertedQ)) || 
-                (i.itemID && i.itemID.toLowerCase().includes(convertedQ)) || 
-                (i.dancer && i.dancer.toLowerCase().includes(convertedQ))
-            );
+            const filtered = allData.filter(i => (i.name && i.name.toLowerCase().includes(convertedQ)) || (i.itemID && i.itemID.toLowerCase().includes(convertedQ)) || (i.dancer && i.dancer.toLowerCase().includes(convertedQ)));
             renderUI(filtered);
         }
 
-        // --- Standard Functions ---
         async function manageList(key) {
             const action = prompt(`დაამატეთ ახალი ან წაშალეთ (მაგ: ჩოხა!) :`);
             if(!action) return;
-            db.ref('lists').once('value', snap => {
-                let list = snap.val()?.[key] || [];
+            db.ref('lists/' + key).once('value', snap => {
+                let list = snap.val() || [];
                 if(action.endsWith('!')) {
                     const toDel = action.slice(0, -1).trim();
                     list = list.filter(i => i !== toDel);
@@ -272,7 +281,7 @@
             }
 
             const data = {
-                itemID: document.getElementById('itemID').value || "EGR-" + Math.floor(1000 + Math.random() * 9000),
+                itemID: document.getElementById('itemID').value || "EGR-0000",
                 name: document.getElementById('name').value,
                 category: document.getElementById('category').value,
                 gender: document.getElementById('gender').value,
@@ -290,16 +299,45 @@
 
         function deleteItem(id) { if(confirm('წავშალოთ ნივთი?')) db.ref('inventory/' + id).remove(); }
         function zoomImage(url) { if(url) { document.getElementById('lightbox-img').src = url; document.getElementById('lightbox').classList.remove('hidden'); } }
-        function changeSection(s) { 
-            currentSection = s; 
-            document.querySelectorAll('nav button').forEach(b => b.classList.remove('tab-active'));
-            document.getElementById('tab-'+s).classList.add('tab-active');
-            renderUI(); 
+        
+        function editItem(id) {
+            const i = allData.find(x => x.id === id);
+            if(!i) return;
+            document.getElementById('edit-id').value = id;
+            document.getElementById('itemID').value = i.itemID || "";
+            document.getElementById('name').value = i.name || "";
+            document.getElementById('category').value = i.category || "";
+            document.getElementById('gender').value = i.gender || "ბიჭი";
+            document.getElementById('firstUse').value = i.firstUse || "";
+            document.getElementById('isOut').checked = i.isOut || false;
+            document.getElementById('dancer').value = i.dancer || "";
+            document.getElementById('outDate').value = i.outDate || "";
+            if(i.photo) {
+                document.getElementById('imgPreview').src = i.photo;
+                document.getElementById('imgPreview').classList.remove('hidden');
+                document.getElementById('photoIcon').classList.add('hidden');
+            } else {
+                document.getElementById('imgPreview').classList.add('hidden');
+                document.getElementById('photoIcon').classList.remove('hidden');
+            }
+            toggleOutFields();
+            document.getElementById('modal-title').textContent = "რედაქტირება";
+            document.getElementById('modal').classList.remove('hidden');
         }
-        function openModal() { document.getElementById('inventoryForm').reset(); document.getElementById('edit-id').value = ""; document.getElementById('imgPreview').classList.add('hidden'); document.getElementById('modal').classList.remove('hidden'); }
+
+        function openModal() { 
+            document.getElementById('inventoryForm').reset(); 
+            document.getElementById('edit-id').value = ""; 
+            document.getElementById('imgPreview').classList.add('hidden'); 
+            document.getElementById('photoIcon').classList.remove('hidden'); 
+            document.getElementById('modal-title').textContent = "რეგისტრაცია";
+            document.getElementById('modal').classList.remove('hidden'); 
+        }
+
         function closeModal() { document.getElementById('modal').classList.add('hidden'); }
         function toggleOutFields() { document.getElementById('assignFields').classList.toggle('hidden', !document.getElementById('isOut').checked); }
-        function previewImage(input) { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = e => { document.getElementById('imgPreview').src = e.target.result; document.getElementById('imgPreview').classList.remove('hidden'); }; reader.readAsDataURL(input.files[0]); } }
+        function changeSection(s) { currentSection = s; document.querySelectorAll('nav button').forEach(b => b.classList.remove('tab-active')); document.getElementById('tab-'+s).classList.add('tab-active'); renderUI(); }
+        function previewImage(input) { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = e => { document.getElementById('imgPreview').src = e.target.result; document.getElementById('imgPreview').classList.remove('hidden'); document.getElementById('photoIcon').classList.add('hidden'); }; reader.readAsDataURL(input.files[0]); } }
         
         db.ref('lists').on('value', snap => {
             const l = snap.val() || {};
